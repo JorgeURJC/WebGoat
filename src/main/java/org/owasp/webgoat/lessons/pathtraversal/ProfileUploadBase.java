@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -39,7 +40,13 @@ public class ProfileUploadBase extends AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser();
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
+      Path targetDirectoryPath = uploadDirectory.toPath().normalize();
+      Path resolvedPath = targetDirectoryPath.resolve(fullName).normalize();
+
+      if (!resolvedPath.startsWith(targetDirectoryPath)) {
+        throw new IOException("Entry is outside of the target directory");
+      }
+      File uploadedFile = resolvedPath.toFile();
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
